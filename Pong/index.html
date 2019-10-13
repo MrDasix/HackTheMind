@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Pong</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.js"></script>
+
+    <style>
+        html, body {
+            width: 100vw;
+            height: 100vh;
+
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
+</head>
+<body style="display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh;">
+    <script>
+        WIDTH = window.screen.width;
+        HEIGTH = window.screen.height;
+
+        WIDTH *= 0.9;
+        HEIGTH *= 0.7;
+
+        paddle_width = 20;
+        paddle_heigth = 75;
+
+        paddle1_y = paddle2_y = HEIGTH/2
+
+
+        ball_width = 15
+        ball_heigth = 15
+        ballSpeedY = Math.random() < 0.5 ? -1: 1
+        ballSpeedX = Math.random() < 0.5 ? -1: 1
+        ballx = WIDTH/2
+        bally = HEIGTH/2
+
+        SCORE1 = 0
+        SCORE2 = 0
+
+        function setup() {
+            createCanvas(WIDTH, HEIGTH);
+        }
+
+        function draw() {
+            background(51);
+            rectMode(CENTER);
+            noStroke();
+
+            player1 = rect(20, getPaddle1Position(), paddle_width, paddle_heigth);
+            player2 = rect(WIDTH-20, getPaddle2Position(), paddle_width, paddle_heigth);
+            
+            
+            ball = rect(ballx ,bally ,ball_width,ball_heigth);
+            checkballColision();
+            ballx += ballSpeedX;
+            bally += ballSpeedY;
+
+            textSize(50);
+            textAlign(CENTER);
+            fill(255, 255, 255);
+            text(SCORE1, WIDTH/2 - 50, 75);
+            text(SCORE2, WIDTH/2 + 50, 75);
+
+            if(keyIsDown(83)) paddle1_y +=5;
+            if(keyIsDown(87)) paddle1_y -=5;
+
+            /*
+            if(keyIsDown(DOWN_ARROW)) paddle2_y +=5;
+            if(keyIsDown(UP_ARROW)) paddle2_y -=5;
+            */
+
+            //////////AI
+            /*fetch("http://127.0.0.1:5000/relax").then(function(response) {
+                return response.json();
+            })
+            .then(function(myJson) {
+                fetch("http://127.0.0.1:5000/threshold").then(function(response2) {
+                    return response2.json();
+                })
+                .then(function(myJson2) {
+                    if(myJson > myJson2) paddle2_y +=1;
+                    else paddle2_y -=1;
+                });
+            });*/
+
+            
+            fetch(`http://127.0.0.1:5000/updown`, {
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+
+                })
+                .then((response) => response.json())
+                .then((myJson) => {
+                    if(myJson == '1') paddle2_y -=1;
+                    else paddle2_y +=1;
+                });
+
+            if(keyIsDown(187)){
+                ballSpeedY *= 1.01;
+                ballSpeedX *= 1.01;
+            }
+
+            if(keyIsDown(189)){
+                ballSpeedY *= 0.99;
+                ballSpeedX *= 0.99;
+            }
+
+            
+        }
+
+        function getPaddle1Position(){
+            if (paddle1_y + paddle_heigth/2 > HEIGTH) paddle1_y = HEIGTH - paddle_heigth/2;
+            if (paddle1_y - paddle_heigth/2 < 0) paddle1_y = 0 + paddle_heigth/2;
+            return paddle1_y;
+        }
+
+        function getPaddle2Position(){
+            if (paddle2_y + paddle_heigth/2 > HEIGTH) paddle2_y = HEIGTH - paddle_heigth/2;
+            if (paddle2_y - paddle_heigth/2 < 0) paddle2_y = 0 + paddle_heigth/2;
+            return paddle2_y;            
+        }
+
+        function checkballColision(){
+            //Wall
+            if(ballx - ball_width/2 <= 0){
+                gameOver();
+                SCORE2 += 1;
+            }
+            if(ballx + ball_width/2 >= WIDTH){
+                gameOver();
+                SCORE1 += 1;
+            }
+            if(bally - ball_width/2 <= 0 || bally + ball_heigth/2 >= HEIGTH) ballSpeedY *= -1
+
+            //Paddle 1
+            if(bally < getPaddle1Position() + paddle_heigth/2 && bally > getPaddle1Position() - paddle_heigth/2){
+                if (ballx <= 20+paddle_width/2) ballSpeedX *= -1;
+            }
+
+            //Paddle 2
+            if(bally < getPaddle2Position() + paddle_heigth/2 && bally > getPaddle2Position() - paddle_heigth/2){
+                if (ballx >= WIDTH-20-paddle_width/2) ballSpeedX *= -1;
+            }
+        }
+
+        function gameOver(){
+            ballx = WIDTH/2 - ball_width/2
+            bally = HEIGTH/2 - ball_heigth/2
+            ballSpeedY = Math.random() < 0.5 ? -1: 1
+            ballSpeedX = Math.random() < 0.5 ? -1: 1
+        }
+    </script>
+</body>
+</html>
