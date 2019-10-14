@@ -15,3 +15,7 @@ Also you can change balls velocity with ``+`` and ``-`` keys
 * Open ``HackTheMind/Pong/index.html``
 * Enjoy
 
+
+
+
+<sub><sup>Project made with :heart: for HackUPC 2019</sub></sup>
